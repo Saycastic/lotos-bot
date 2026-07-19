@@ -268,11 +268,12 @@ async def handle_calc(update: Update, context: ContextTypes.DEFAULT_TYPE):
     parts = query.data.split(":")
 
     # calc:bot или calc:site — первый выбор
-    if len(parts) == 2:
+    if len(parts) == 2 and parts[1] in ("bot", "site"):
         calc_type = parts[1]
         context.user_data["calc_type"] = calc_type
         context.user_data["calc_chosen"] = set()
-        return await _show_calc_features(query, context, calc_type)
+        await _show_calc_features(query, context, calc_type)
+        return
 
     # calc:toggle:feature_id
     if parts[1] == "toggle":
@@ -284,7 +285,8 @@ async def handle_calc(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             chosen.add(feature_id)
         context.user_data["calc_chosen"] = chosen
-        return await _show_calc_features(query, context, calc_type)
+        await _show_calc_features(query, context, calc_type)
+        return
 
     # calc:result
     if parts[1] == "result":
@@ -306,7 +308,10 @@ async def handle_calc(update: Update, context: ContextTypes.DEFAULT_TYPE):
             [InlineKeyboardButton("◀️ Пересчитать", callback_data=f"calc:{calc_type}")],
             [InlineKeyboardButton("🏠 Меню", callback_data="menu:main")],
         ])
-        await query.edit_message_text("\n".join(lines), parse_mode="Markdown", reply_markup=kb)
+        try:
+            await query.edit_message_text("\n".join(lines), parse_mode="Markdown", reply_markup=kb)
+        except Exception:
+            pass
 
 
 async def _show_calc_features(query, context, calc_type: str):
@@ -334,13 +339,16 @@ async def _show_calc_features(query, context, calc_type: str):
         if fid in CALC_FACTORS.get(calc_type, {}).get("features", {})
     )
 
-    await query.edit_message_text(
-        f"🧮 *Калькулятор — {type_name}*\n\n"
-        f"База: {base:,} ₽\n"
-        f"Выбери дополнительные функции:",
-        parse_mode="Markdown",
-        reply_markup=InlineKeyboardMarkup(buttons),
-    )
+    try:
+        await query.edit_message_text(
+            f"🧮 *Калькулятор — {type_name}*\n\n"
+            f"База: {base:,} ₽\n"
+            f"Выбери дополнительные функции:",
+            parse_mode="Markdown",
+            reply_markup=InlineKeyboardMarkup(buttons),
+        )
+    except Exception:
+        pass
 
 
 # ── register commands ─────────────────────────────────────────────────────────
