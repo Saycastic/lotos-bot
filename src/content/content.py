@@ -55,18 +55,6 @@ PORTFOLIO = [
         "stack": "Python · PTB · SQLite · Dodo Payments · Cloudflare",
         "url": "https://x-art.online",
     },
-    {
-        "name": "ArtScout",
-        "desc": "Бот-агрегатор арт-возможностей: гранты, опен-коллы, галереи. 75 источников, LLM-экстракция.",
-        "stack": "Python · FastAPI · SQLite · Anthropic Claude",
-        "url": None,
-    },
-    {
-        "name": "Сайт-визитка LotOS",
-        "desc": "Личная страница разработчика — адаптивный дизайн, тёмная тема, портфолио.",
-        "stack": "HTML · CSS · GitHub Pages",
-        "url": "https://saycastic.ru",
-    },
 ]
 
 FAQ = [
