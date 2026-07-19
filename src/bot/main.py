@@ -248,16 +248,21 @@ async def order_cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def handle_order_action(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
+    log.info(f"[order_action] from={query.from_user.id} data={query.data}")
     if query.from_user.id not in ADMIN_IDS:
         await query.answer("Нет доступа")
         return
     await query.answer()
-    _, status, order_id = query.data.split(":")
-    order_id = int(order_id)
-    update_order_status(order_id, status)
-    await query.edit_message_reply_markup(reply_markup=InlineKeyboardMarkup([[
-        InlineKeyboardButton(f"✔ {status}", callback_data="noop")
-    ]]))
+    try:
+        _, status, order_id = query.data.split(":")
+        order_id = int(order_id)
+        update_order_status(order_id, status)
+        label = "✅ В работе" if status == "working" else "❌ Закрыто"
+        await query.edit_message_reply_markup(reply_markup=InlineKeyboardMarkup([[
+            InlineKeyboardButton(label, callback_data="noop")
+        ]]))
+    except Exception as e:
+        log.error(f"[order_action] error: {e}")
 
 
 # ── Калькулятор ──────────────────────────────────────────────────────────────
@@ -399,11 +404,12 @@ def main():
     app.add_handler(CommandHandler("start", cmd_start))
     app.add_handler(CommandHandler("menu", cmd_menu))
     app.add_handler(CommandHandler("orders", cmd_orders))
-    app.add_handler(order_conv)
+    # order action до conv — иначе ConversationHandler перехватит
+    app.add_handler(CallbackQueryHandler(handle_order_action, pattern=r"^order:(working|closed):"))
     app.add_handler(CallbackQueryHandler(handle_menu, pattern=r"^menu:"))
     app.add_handler(CallbackQueryHandler(handle_calc, pattern=r"^calc:"))
-    app.add_handler(CallbackQueryHandler(handle_order_action, pattern=r"^order:"))
     app.add_handler(CallbackQueryHandler(lambda u, c: u.callback_query.answer(), pattern=r"^noop$"))
+    app.add_handler(order_conv)
 
     log.info("LotOS bot starting...")
     app.run_polling(drop_pending_updates=True)
